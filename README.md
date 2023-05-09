@@ -13,7 +13,7 @@ Infatti, è stata realizzata un'interfaccia web, utilizzando Dash e Plotly, con 
   - recuperare i dati dal cloud e mostrarli attraverso opportuni grafici;
   - permettere l'aggiornamento delle soglie di umidità e illuminazione.
 
-<img src="image/schema.jpg" width="500">
+<img src="images/schema.jpg" width="500">
 
 ## Componenti Utilizzati
 
@@ -42,7 +42,7 @@ Infatti, è stata realizzata un'interfaccia web, utilizzando Dash e Plotly, con 
 
 ## Schema Collegamenti
 
-<img src="image/fritzing.jpg" width="500">
+<img src="images/fritzing.png" width="500">
 
 ## Bibliografia
 
@@ -51,7 +51,7 @@ Per la creazione dell'interfaccia web, e per la risoluzione dei vari problemi af
 
 Per l'utilizzo e il funzionamento della libreria u8g abbiamo utilizzato la documentazione presente su github: 
   - https://github.com/olikraus/u8glib/wiki/userreference
-  - 
+
 Per l'utilizzo dei vari sensori abbiamo trovato utili le seguenti guide:
   - https://randomnerdtutorials.com/guide-for-oled-display-with-arduino/
   - https://lastminuteengineers.com/water-level-sensor-arduino-tutorial/
