@@ -1,14 +1,12 @@
-Presentazione: xxx
-
 ## Introduzione
 
 Il progetto ha lo scopo di gestire l'irrigazione di una pianta in modo automatico, evitando la disidratazione del terreno. <br />
 Per questo, sono state utilizzate due schede comunicanti: un Arduino UNO e un ESP32 Thing Plus. <br /><br />
-L'Arduino è responsabile di determinare se la pianta ha bisogno di essere irrigata, utilizzando vari sensori. Grazie ad opportuni controlli, non si irriga eccessivamente la pianta, evitando di danneggiarla. <br />
+L'**Arduino** è responsabile di determinare se la pianta ha bisogno di essere irrigata, utilizzando vari sensori. Grazie ad opportuni controlli, non si irriga eccessivamente la pianta, evitando di danneggiarla. <br />
 Attraverso un sensore di livello dell’acqua viene monitorata la quantità di acqua disponibile. Nel caso in cui il livello dell’acqua fosse basso, viene segnalato il problema mediante l’accensione di un LED. <br />
 Un display OLED 128x64, collegato all'Arduino, mostra l'ora e la data corrente (ricevuti dall'ESP32), la temperatura e l'umidità ambientale. <br />
 Infine, ogni 16 secondi, l'Arduino invia i valori dei vari sensori all'ESP32, che saranno memorizzati in cloud (ThingSpeak).<br /><br />
-L'ESP32 ha il compito di inviare i dati all'Arduino (ora/data e soglie delle threshold) quando richiesto e quando necessario, oltre a memorizzare i valori dei vari sensori nel cloud per la visualizzazione tramite un'interfaccia web.<br /><br />
+L'**ESP32** ha il compito di inviare i dati all'Arduino (ora/data e soglie delle threshold) quando richiesto e quando necessario, oltre a memorizzare i valori dei vari sensori nel cloud per la visualizzazione tramite un'interfaccia web.<br /><br />
 Infatti, è stata realizzata un'interfaccia web, utilizzando Dash e Plotly, con lo scopo di:
   - recuperare i dati dal cloud e mostrarli attraverso opportuni grafici;
   - permettere l'aggiornamento delle soglie di umidità e illuminazione.
