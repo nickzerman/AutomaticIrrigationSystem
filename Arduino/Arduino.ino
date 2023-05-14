@@ -36,8 +36,11 @@ int lightingThreshold;
 char year[3];
 char month[3];
 char day[3];
-char hour[3];
+char hours[3];
 char minutes[3];
+
+String hour;
+String date;
 
 void setup() {
   pinMode(redLED,OUTPUT);
@@ -50,24 +53,20 @@ void setup() {
   pinMode(lightSensor,INPUT);
   pinMode(waterSensor,INPUT);
 
-  Serial.begin(9600);
-  espSerial.begin(9600);
-
   digitalWrite(redLED,HIGH);
   digitalWrite(yellowLED,HIGH);
   digitalWrite(greenLED,HIGH);
 
-  u8g.setFont(u8g_font_unifont);
-  
-  espSerial.print("D"); //D --> Request Data
-  while(!espSerial.available()){}
-  String reader = espSerial.readString();
-  receiveDataESP(reader);
+  delay(5000);
 
-  espSerial.print("H"); //H --> Request Hour and Date
+  Serial.begin(9600);
+  espSerial.begin(9600);
+  
+  espSerial.print("Handshake"); //D --> Request Data
   while(!espSerial.available()){}
-  reader = espSerial.readString();
-  receiveHoursESP(reader);
+
+  u8g.setFont(u8g_font_unifont);
+  showDisplay();
 
   Timer1.initialize(8000000);
   Timer1.attachInterrupt(sendDataESP);
@@ -75,8 +74,17 @@ void setup() {
 }
 
 void loop() { 
-  if(espSerial.available()){
-    String reader = espSerial.readString();
+  while(espSerial.available()){
+    String reader = "";
+    char c;
+    while(espSerial.available()){
+      c = espSerial.read();
+      if(c=='\n'){
+        break;
+      } else {
+        reader = reader + c;
+      }
+    }
     if(reader[0]=='D'){
       receiveDataESP(reader);
     }
@@ -91,6 +99,7 @@ void loop() {
     digitalWrite(redLED,LOW);
   }
 
+  Serial.println((String) "Soglia Umidità: " + umidityThreshold);
   if(analogRead(soilMoisture)<umidityThreshold){
     digitalWrite(greenLED,HIGH);
     digitalWrite(yellowLED,LOW);
@@ -113,6 +122,7 @@ void receiveDataESP(String reader){
   token=strtok(NULL,";"); //Avoid first token
 
   while(token!=NULL){
+    //Serial.println((String) "Hum"+ token);
     if(checkUmidity){
       umidityThreshold = atoi(token); //String to int
       checkUmidity=!checkUmidity;
@@ -136,20 +146,10 @@ void receiveHoursESP(String reader){
   while(token!=NULL){
     switch(counter){
       case 1:
-        strcpy(day,token);
+        date = token;
         break;
       case 2:
-        strcpy(month,token);
-        break;
-      case 3:
-        strcpy(year,token);
-        break;
-      case 4:
-        strcpy(hour,token);
-        break;
-      case 5:
-        strcpy(minutes,token);
-        break;
+        hour = token;
     }
     counter++;
     token=strtok(NULL,";"); //Next token
@@ -157,9 +157,6 @@ void receiveHoursESP(String reader){
 }
 
 void showDisplay(){
-  String hours = (String) hour + ":" + minutes;
-  String date = (String) day + "/" + month + "/" + year;
-
   sht.readSensor();
   
   char tempStr[5];
@@ -178,7 +175,7 @@ void showDisplay(){
       u8g.setFont(u8g_font_7x13r);
       u8g.setFontPosBaseline();
       u8g.setPrintPos(20,27);
-      u8g.print(hours);
+      u8g.print(hour);
 
       u8g.setFont(u8g_font_6x10r);
       u8g.setFontPosTop();
