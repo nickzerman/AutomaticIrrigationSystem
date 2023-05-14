@@ -5,16 +5,16 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-#define FIREBASE_HOST "link"
-#define FIREBASE_AUTH "key"
+#define FIREBASE_HOST "FIREBASE URL"
+#define FIREBASE_AUTH "FIREBASE AUTH"
 
 #define RX 16
 #define TX 17
 
 FirebaseData fData;
 
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "SSID WI-FI";
+const char* password = "PASSWORD WI-FI";
 
 const char* ntpServer = "europe.pool.ntp.org";
 const long gmtOffset_sec = 3600;
@@ -22,15 +22,15 @@ const int daylightOffset_sec = 3600;
 
 WiFiClient client;
 
-unsigned long thingspeakChannel = number;
-const char* APIKey = "apikey";
+unsigned long thingspeakChannel = IDThingSpeakChannel;
+const char* APIKey = "WriteAPIKEYThingSpeak";
 
 unsigned long getDataPrevMillis=0;
 unsigned long getHourPrevMillis=0;
 
 struct tm timeinfo;
 
-int lightingBK=0;
+int lightingBK=1;
 int umidityBK=0;
 
 char year[3];
@@ -43,18 +43,31 @@ void setup() {
   Firebase.begin(FIREBASE_HOST,FIREBASE_AUTH);
   Firebase.reconnectWiFi(true);
   
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial1.begin(9600,SERIAL_8N1,RX,TX);
 
   WiFi.mode(WIFI_STA);
+
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.println("Connection attempt...");
+    while(WiFi.status() != WL_CONNECTED){
+      WiFi.begin(ssid,password);
+      delay(5000);
+    }
+    Serial.println("\Connected.");
+  }
+
   ThingSpeak.begin(client);
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+  while(!Serial1.available());
+  delay(5000);
 }
 
 void loop() {
   if(WiFi.status() != WL_CONNECTED){
-    Serial.print("Connection attempt...");
+    Serial.println("Connection attempt...");
     while(WiFi.status() != WL_CONNECTED){
       WiFi.begin(ssid,password);
       delay(5000);
@@ -65,34 +78,36 @@ void loop() {
   String reader;
   if(Serial1.available()){
     reader = Serial1.readString();
+    Serial.println(reader);
   }
 
-  if(reader.equals("D")){
+  if(strcmp(reader.c_str(),"Handshake")==0){
     sendDataArduino();
-  } 
-  else if(reader.equals("H")){
+    delay(2500); //wait for arduino to receive data
     sendHoursArduino();
-  }
-  else {
+    delay(2500);
+  } else {
     char* readerC = (char*) reader.c_str();
-
     int counter=1;
     char* token;
     token = strtok(readerC,";");
-  
+    
     while(token!=NULL){
       ThingSpeak.setField(counter,token);
       token=strtok(NULL,";");
       counter++;
     }
-    
+      
     ThingSpeak.writeFields(thingspeakChannel,APIKey);
   }
 
-  if(Firebase.ready() && (millis()-getDataPrevMillis > 5000 || getDataPrevMillis == 0)){
+  
+
+  if(Firebase.ready() && (millis()-getDataPrevMillis > 5000)){
     getDataPrevMillis = millis();
     int umidity;
     int lighting;
+    Firebase.reconnectWiFi(true);
     if(Firebase.RTDB.getInt(&fData,"/illuminazione")){
       if(fData.dataType()=="int"){
         lighting = fData.intData();
@@ -103,14 +118,20 @@ void loop() {
         umidity = fData.intData();
       }
     }
+    Serial.println((String) "lb" + lightingBK);
+    Serial.println((String) "um" + umidityBK);
     if(umidity!=umidityBK || lighting!=lightingBK){
-      umidityBK = umidity;
-      lightingBK = lighting;
+      if(umidity>=0 && umidity<=1024){
+        umidityBK = umidity;
+      }
+      if(lighting>=0 && lighting<=1024){
+        lightingBK = lighting;
+      }
       sendDataArduino();
     }
   }
 
-  if(millis()-getHourPrevMillis > 5000 || getHourPrevMillis==0){
+  if(millis()-getHourPrevMillis > 5000){
     getHourPrevMillis = millis();
 
     if(getLocalTime(&timeinfo)){
@@ -140,5 +161,5 @@ void sendDataArduino(){
 }
 
 void sendHoursArduino(){
-  Serial1.print((String) "H;" + day + ";" + month + ";" + year + ";" + hour + ";" + minutes);
+  Serial1.println((String) "H;" + day + "/" + month + "/" + year + ";" + hour + ":" + minutes);
 }
